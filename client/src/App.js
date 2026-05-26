@@ -696,7 +696,54 @@ function App() {
                     </p>
                   </div>
 
-                  <button className="cart-btn">Place Order</button>
+                  <button
+                    className="cart-btn"
+                    onClick={async () => {
+                      try {
+                        if (!customerName || !phone || !address) {
+                          toast.error("Please fill all details");
+                          return;
+                        }
+
+                        if (cart.length === 0) {
+                          toast.error("Cart is empty");
+                          return;
+                        }
+
+                        const orderData = {
+                          userId: user._id,
+                          customerName,
+                          phone,
+                          address,
+                          prescriptionImage,
+                          items: cart,
+                          totalAmount: grandTotal,
+                          status: "Pending",
+                        };
+
+                        await axios.post(
+                          "https://healgo-backend.onrender.com/api/orders",
+                          orderData,
+                        );
+
+                        toast.success("Order Placed Successfully");
+
+                        setCart([]);
+                        setCustomerName("");
+                        setPhone("");
+                        setAddress("");
+                        setPrescriptionImage("");
+
+                        fetchOrders();
+                        fetchMyOrders(user);
+                      } catch (error) {
+                        console.log(error);
+                        toast.error("Order Failed");
+                      }
+                    }}
+                  >
+                    Place Order
+                  </button>
                 </div>
               </div>
             </>
