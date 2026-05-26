@@ -39,12 +39,47 @@ function App() {
   const [medDescription, setMedDescription] = useState("");
   const [medImage, setMedImage] = useState("");
 
+  // --- 1. DEFINE FUNCTIONS FIRST TO PREVENT INITIALIZATION ERRORS ---
+  const fetchMedicines = async () => {
+    try {
+      const { data } = await axios.get(
+        "https://healgo-backend.onrender.com/api/medicines",
+      );
+      setMedicines(data);
+    } catch (error) {
+      console.error("Error fetching medicines:", error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const { data } = await axios.get(
+        "https://healgo-backend.onrender.com/api/orders",
+      );
+      setOrders(data);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+
+  const fetchMyOrders = async (currentUser = user) => {
+    if (!currentUser || !currentUser._id) return;
+    try {
+      const { data } = await axios.get(
+        `https://healgo-backend.onrender.com/api/orders/my-orders/${currentUser._id}`,
+      );
+      setMyOrders(data);
+    } catch (error) {
+      console.error("Error fetching user orders:", error);
+    }
+  };
+
+  // --- 2. HOOKS RUN SAFE AFTER FUNCTIONS ARE INITIALIZED ---
   useEffect(() => {
     fetchMedicines();
     fetchOrders();
 
     const savedUser = localStorage.getItem("healgoUser");
-
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
       setUser(parsedUser);
@@ -66,38 +101,7 @@ function App() {
     };
   }, []);
 
-  const savedUser = localStorage.getItem("healgoUser");
-
-  if (savedUser) {
-    const parsedUser = JSON.parse(savedUser);
-    setUser(parsedUser);
-    fetchMyOrders(parsedUser);
-  }
-
-  const fetchMedicines = async () => {
-    setMedicines(data);
-    const { data } = await axios.get(
-      "https://healgo-backend.onrender.com/api/medicines",
-    );
-    setMedicines(data);
-  };
-
-  const fetchOrders = async () => {
-    const { data } = await axios.get(
-      "https://healgo-backend.onrender.com/api/orders",
-    );
-    setOrders(data);
-  };
-
-  const fetchMyOrders = async (currentUser = user) => {
-    if (!currentUser) return;
-
-    const { data } = await axios.get(
-      `https://healgo-backend.onrender.com/api/orders/my-orders/${currentUser._id}`,
-    );
-
-    setMyOrders(data);
-  };
+  // (REMOVED THE LOOSE LOCALSTORAGE GET/SET BLOCK THAT WAS CAUSING LOOPS HERE)
 
   const googleLogin = async () => {
     try {
