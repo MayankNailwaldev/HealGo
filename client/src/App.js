@@ -365,6 +365,7 @@ function App() {
       );
 
       toast.success("Order Placed Successfully");
+      alert("✅ Order placed successfully! You can check it in My Orders.");
 
       setCart([]);
       setCustomerName("");
