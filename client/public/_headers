@@ -1,2 +1,14 @@
+/*
+  X-Frame-Options: DENY
+
+/*.png
+  Content-Type: image/png
+
+/*.json
+  Content-Type: application/json
+
+/*.js
+  Content-Type: application/javascript
+
 /sitemap.xml
   Content-Type: application/xml
