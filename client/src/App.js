@@ -364,8 +364,13 @@ function App() {
         },
       );
 
-      toast.success("Order Placed Successfully");
-      alert("✅ Order placed successfully! You can check it in My Orders.");
+      window.alert("✅ Order placed successfully! Check My Orders.");
+      toast.success("✅ Order placed successfully!");
+      setTimeout(() => {
+        setShowCart(false);
+        setShowMyOrders(true);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }, 500);
 
       setCart([]);
       setCustomerName("");
