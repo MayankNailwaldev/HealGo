@@ -9,7 +9,8 @@ import { auth, provider } from "./firebase";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const socket = io("https://healgo-backend.onrender.com");
+const API_URL = "https://healgo-backend.onrender.com";
+const socket = io(API_URL);
 
 function App() {
   const [medicines, setMedicines] = useState([]);
@@ -26,6 +27,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [activeBanner, setActiveBanner] = useState(0);
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   const [user, setUser] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -76,23 +78,19 @@ function App() {
 
   const fetchMedicines = async () => {
     try {
-      const { data } = await axios.get(
-        "https://healgo-backend.onrender.com/api/medicines",
-      );
-      setMedicines(data);
+      const { data } = await axios.get(`${API_URL}/api/medicines`);
+      setMedicines(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch medicines error:", error);
     }
   };
 
   const fetchOrders = async () => {
     try {
-      const { data } = await axios.get(
-        "https://healgo-backend.onrender.com/api/orders",
-      );
-      setOrders(data);
+      const { data } = await axios.get(`${API_URL}/api/orders`);
+      setOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch orders error:", error);
     }
   };
 
@@ -101,11 +99,11 @@ function App() {
 
     try {
       const { data } = await axios.get(
-        `https://healgo-backend.onrender.com/api/orders/my-orders/${currentUser._id}`,
+        `${API_URL}/api/orders/my-orders/${currentUser._id}`
       );
-      setMyOrders(data);
+      setMyOrders(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error(error);
+      console.error("Fetch my orders error:", error);
     }
   };
 
@@ -114,29 +112,32 @@ function App() {
     fetchOrders();
 
     const savedUser = localStorage.getItem("healgoUser");
-
     if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      fetchMyOrders(parsedUser);
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        fetchMyOrders(parsedUser);
+      } catch (error) {
+        localStorage.removeItem("healgoUser");
+      }
     }
 
-    socket.on("medicineUpdated", () => {
-      fetchMedicines();
-    });
+    socket.on("medicineUpdated", fetchMedicines);
 
     socket.on("orderUpdated", () => {
       fetchOrders();
-
       const savedUser = localStorage.getItem("healgoUser");
-
       if (savedUser) {
-        fetchMyOrders(JSON.parse(savedUser));
+        try {
+          fetchMyOrders(JSON.parse(savedUser));
+        } catch (error) {
+          console.error(error);
+        }
       }
     });
 
     return () => {
-      socket.off("medicineUpdated");
+      socket.off("medicineUpdated", fetchMedicines);
       socket.off("orderUpdated");
     };
   }, []);
@@ -154,22 +155,18 @@ function App() {
       const result = await signInWithPopup(auth, provider);
       const googleUser = result.user;
 
-      const { data } = await axios.post(
-        "https://healgo-backend.onrender.com/api/users/google-login",
-        {
-          name: googleUser.displayName,
-          email: googleUser.email,
-        },
-      );
+      const { data } = await axios.post(`${API_URL}/api/users/google-login`, {
+        name: googleUser.displayName,
+        email: googleUser.email,
+      });
 
       localStorage.setItem("healgoUser", JSON.stringify(data));
       setUser(data);
-      fetchMyOrders(data);
+      await fetchMyOrders(data);
       setShowAuth(false);
-
       toast.success("Google Login Successful");
     } catch (error) {
-      console.log(error);
+      console.log("Google login error:", error);
       toast.error("Google Login Failed");
     }
   };
@@ -183,22 +180,19 @@ function App() {
     toast.success("Logged out successfully");
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
+  const readFileAsBase64 = (file, callback) => {
     if (!file) return;
-
     const reader = new FileReader();
-    reader.onloadend = () => setMedImage(reader.result);
+    reader.onloadend = () => callback(reader.result);
     reader.readAsDataURL(file);
   };
 
-  const handlePrescriptionUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleImageUpload = (e) => {
+    readFileAsBase64(e.target.files[0], setMedImage);
+  };
 
-    const reader = new FileReader();
-    reader.onloadend = () => setPrescriptionImage(reader.result);
-    reader.readAsDataURL(file);
+  const handlePrescriptionUpload = (e) => {
+    readFileAsBase64(e.target.files[0], setPrescriptionImage);
   };
 
   const addMedicine = async () => {
@@ -213,10 +207,8 @@ function App() {
         return;
       }
 
-      const token = user?.token;
-
       await axios.post(
-        "https://healgo-backend.onrender.com/api/medicines",
+        `${API_URL}/api/medicines`,
         {
           name: medName,
           category: medCategory,
@@ -228,23 +220,21 @@ function App() {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${user?.token}`,
           },
-        },
+        }
       );
 
       toast.success("Medicine Added");
-
       setMedName("");
       setMedCategory("");
       setMedPrice("");
       setMedStock("");
       setMedDescription("");
       setMedImage("");
-
       fetchMedicines();
     } catch (error) {
-      console.log(error);
+      console.log("Medicine add error:", error.response?.data || error.message);
       toast.error(error.response?.data?.message || "Medicine Add Failed");
     }
   };
@@ -268,8 +258,8 @@ function App() {
         cart.map((item) =>
           item._id === medicine._id
             ? { ...item, quantity: item.quantity + 1 }
-            : item,
-        ),
+            : item
+        )
       );
     } else {
       setCart([...cart, { ...medicine, quantity: 1 }]);
@@ -281,8 +271,8 @@ function App() {
   const increaseQuantity = (id) => {
     setCart(
       cart.map((item) =>
-        item._id === id ? { ...item, quantity: item.quantity + 1 } : item,
-      ),
+        item._id === id ? { ...item, quantity: item.quantity + 1 } : item
+      )
     );
   };
 
@@ -292,9 +282,9 @@ function App() {
         .map((item) =>
           item._id === id
             ? { ...item, quantity: Math.max(item.quantity - 1, 0) }
-            : item,
+            : item
         )
-        .filter((item) => item.quantity > 0),
+        .filter((item) => item.quantity > 0)
     );
   };
 
@@ -304,8 +294,8 @@ function App() {
   };
 
   const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0,
+    (total, item) => total + Number(item.price || 0) * item.quantity,
+    0
   );
 
   const deliveryFee = cartTotal > 499 || cartTotal === 0 ? 0 : 40;
@@ -313,13 +303,15 @@ function App() {
   const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const placeOrder = async () => {
+    if (placingOrder) return;
+
     try {
       if (!user) {
         toast.error("Please login first");
         return;
       }
 
-      if (!customerName || !phone || !address) {
+      if (!customerName.trim() || !phone.trim() || !address.trim()) {
         toast.error("Please fill all checkout details");
         return;
       }
@@ -329,48 +321,41 @@ function App() {
         return;
       }
 
+      setPlacingOrder(true);
+
       const orderData = {
         user: user._id,
         userId: user._id,
-        customerName,
-        phone,
-        address,
+        customerName: customerName.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
         prescriptionImage: prescriptionImage || "",
         items: cart.map((item) => ({
           medicine: item._id,
           medicineId: item._id,
           name: item.name,
           category: item.category,
-          price: item.price,
+          price: Number(item.price || 0),
           quantity: item.quantity,
           image: item.image || "",
         })),
         total: grandTotal,
         totalAmount: grandTotal,
         deliveryFee,
-        status: "Pending",
+        status: "Order Placed",
         paymentMethod: "COD",
       };
 
       console.log("ORDER DATA:", orderData);
 
-      await axios.post(
-        "https://healgo-backend.onrender.com/api/orders",
-        orderData,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
+      await axios.post(`${API_URL}/api/orders`, orderData, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
         },
-      );
+      });
 
       window.alert("✅ Order placed successfully! Check My Orders.");
       toast.success("✅ Order placed successfully!");
-      setTimeout(() => {
-        setShowCart(false);
-        setShowMyOrders(true);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 500);
 
       setCart([]);
       setCustomerName("");
@@ -382,10 +367,15 @@ function App() {
       await fetchMyOrders(user);
 
       setShowCart(false);
+      setShowAdmin(false);
       setShowMyOrders(true);
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.log("ORDER ERROR:", error.response?.data || error.message);
       toast.error(error.response?.data?.message || "Order Failed");
+    } finally {
+      setPlacingOrder(false);
     }
   };
 
@@ -646,7 +636,7 @@ function App() {
               {myOrders.map((order) => (
                 <div className="medicine-card" key={order._id}>
                   <h3>Order #{order._id?.slice(-6)}</h3>
-                  <p className="category">{order.status || "Pending"}</p>
+                  <p className="category">{order.status || "Order Placed"}</p>
                   <p className="desc">
                     Total: ₹{order.totalAmount || order.total || 0}
                   </p>
@@ -764,8 +754,12 @@ function App() {
                   </p>
                 </div>
 
-                <button className="cart-btn" onClick={placeOrder}>
-                  Place Order
+                <button
+                  className="cart-btn"
+                  onClick={placeOrder}
+                  disabled={placingOrder}
+                >
+                  {placingOrder ? "Placing Order..." : "Place Order"}
                 </button>
               </div>
             </div>
@@ -840,7 +834,7 @@ function App() {
         if (cat.name === "All") return null;
 
         const categoryProducts = filteredMedicines.filter(
-          (med) => med.category === cat.name,
+          (med) => med.category === cat.name
         );
 
         if (categoryProducts.length === 0) return null;
@@ -873,7 +867,9 @@ function App() {
                       )}
                     </div>
 
-                    <h3 onClick={() => setSelectedMedicine(med)}>{med.name}</h3>
+                    <h3 onClick={() => setSelectedMedicine(med)}>
+                      {med.name}
+                    </h3>
                     <p className="category">{med.category}</p>
                     <p className="desc">{med.description}</p>
 
