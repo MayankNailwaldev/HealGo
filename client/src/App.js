@@ -50,12 +50,16 @@ function App() {
   }, []);
 
   const fetchMedicines = async () => {
-    const { data } = await axios.get("http://localhost:5000/api/medicines");
+    const { data } = await axios.get(
+      "https://healgo-backend.onrender.com/api/medicines",
+    );
     setMedicines(data);
   };
 
   const fetchOrders = async () => {
-    const { data } = await axios.get("http://localhost:5000/api/orders");
+    const { data } = await axios.get(
+      "https://healgo-backend.onrender.com/api/orders",
+    );
     setOrders(data);
   };
 
@@ -63,7 +67,7 @@ function App() {
     if (!currentUser) return;
 
     const { data } = await axios.get(
-      `http://localhost:5000/api/orders/my-orders/${currentUser._id}`,
+      `https://healgo-backend.onrender.com/api/orders/my-orders/${currentUser._id}`,
     );
 
     setMyOrders(data);
@@ -75,7 +79,7 @@ function App() {
       const googleUser = result.user;
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/users/google-login",
+        "https://healgo-backend.onrender.com/api/users/google-login",
         {
           name: googleUser.displayName,
           email: googleUser.email,
@@ -128,7 +132,7 @@ function App() {
       const token = user?.token;
 
       await axios.post(
-        "http://localhost:5000/api/medicines",
+        "https://healgo-backend.onrender.com/api/medicines",
         {
           name: medName,
           category: medCategory,
@@ -165,11 +169,14 @@ function App() {
     try {
       const token = user?.token;
 
-      await axios.delete(`http://localhost:5000/api/medicines/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axios.delete(
+        `https://healgo-backend.onrender.com/api/medicines/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       toast.success("Medicine Deleted");
       fetchMedicines();
@@ -189,7 +196,7 @@ function App() {
       const token = user?.token;
 
       await axios.put(
-        `http://localhost:5000/api/medicines/${id}`,
+        `https://healgo-backend.onrender.com/api/medicines/${id}`,
         {
           price: Number(newPrice),
           stock: Number(newStock),
@@ -211,9 +218,12 @@ function App() {
 
   const updateStatus = async (orderId, status) => {
     try {
-      await axios.put(`http://localhost:5000/api/orders/${orderId}/status`, {
-        status,
-      });
+      await axios.put(
+        `https://healgo-backend.onrender.com/api/orders/${orderId}/status`,
+        {
+          status,
+        },
+      );
 
       toast.success("Order Status Updated");
       fetchOrders();
@@ -266,22 +276,25 @@ function App() {
     }
 
     try {
-      const { data } = await axios.post("http://localhost:5000/api/orders", {
-        userId: user._id,
-        customerEmail: user.email,
-        customerName,
-        phone,
-        address,
-        totalAmount: cartTotal,
-        paymentMethod: "Cash on Delivery",
-        prescriptionImage,
-        items: cart.map((item) => ({
-          medicineId: item._id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-        })),
-      });
+      const { data } = await axios.post(
+        "https://healgo-backend.onrender.com/api/orders",
+        {
+          userId: user._id,
+          customerEmail: user.email,
+          customerName,
+          phone,
+          address,
+          totalAmount: cartTotal,
+          paymentMethod: "Cash on Delivery",
+          prescriptionImage,
+          items: cart.map((item) => ({
+            medicineId: item._id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        },
+      );
 
       toast.success(data.message);
 
