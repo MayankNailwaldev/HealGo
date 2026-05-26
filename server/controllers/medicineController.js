@@ -1,4 +1,4 @@
-const Medicine = require("../models/Medicine");
+const Medicine = require("../models/medicine");
 const cloudinary = require("../config/cloudinary");
 
 const addMedicine = async (req, res) => {
