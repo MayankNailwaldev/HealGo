@@ -42,18 +42,6 @@ function App() {
   useEffect(() => {
     fetchMedicines();
     fetchOrders();
-    socket.on("medicineUpdated", () => {
-      fetchMedicines();
-    });
-
-    socket.on("orderUpdated", () => {
-      fetchOrders();
-      fetchMyOrders();
-    });
-    return () => {
-      socket.off("medicineUpdated");
-      socket.off("orderUpdated");
-    };
 
     const savedUser = localStorage.getItem("healgoUser");
 
@@ -62,7 +50,29 @@ function App() {
       setUser(parsedUser);
       fetchMyOrders(parsedUser);
     }
+
+    socket.on("medicineUpdated", () => {
+      fetchMedicines();
+    });
+
+    socket.on("orderUpdated", () => {
+      fetchOrders();
+      fetchMyOrders();
+    });
+
+    return () => {
+      socket.off("medicineUpdated");
+      socket.off("orderUpdated");
+    };
   }, []);
+
+  const savedUser = localStorage.getItem("healgoUser");
+
+  if (savedUser) {
+    const parsedUser = JSON.parse(savedUser);
+    setUser(parsedUser);
+    fetchMyOrders(parsedUser);
+  }
 
   const fetchMedicines = async () => {
     setMedicines(data);
