@@ -24,9 +24,10 @@ function App() {
   const [showMyOrders, setShowMyOrders] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [selectedMedicine, setSelectedMedicine] = useState(null);
+  const [activeBanner, setActiveBanner] = useState(0);
 
   const [user, setUser] = useState(null);
-
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const [customerName, setCustomerName] = useState("");
@@ -52,12 +53,32 @@ function App() {
     { name: "Ayurveda Products", icon: "🌿" },
   ];
 
+  const banners = [
+    {
+      badge: "30 Minute Delivery",
+      title: "India's Modern Online Pharmacy",
+      text: "Order medicines, wellness products, supplements and daily healthcare essentials with HealGo.",
+      emoji: "🚀",
+    },
+    {
+      badge: "Trusted Pharmacy",
+      title: "Genuine Medicines Delivered Fast",
+      text: "Buy from verified medicine listings with simple checkout and real-time updates.",
+      emoji: "💊",
+    },
+    {
+      badge: "Healthcare Essentials",
+      title: "Everything For Your Daily Wellness",
+      text: "Skin care, hair care, ayurveda, supplements, pain relief and more in one place.",
+      emoji: "🌿",
+    },
+  ];
+
   const fetchMedicines = async () => {
     try {
       const { data } = await axios.get(
         "https://healgo-backend.onrender.com/api/medicines",
       );
-
       setMedicines(data);
     } catch (error) {
       console.error(error);
@@ -69,7 +90,6 @@ function App() {
       const { data } = await axios.get(
         "https://healgo-backend.onrender.com/api/orders",
       );
-
       setOrders(data);
     } catch (error) {
       console.error(error);
@@ -83,7 +103,6 @@ function App() {
       const { data } = await axios.get(
         `https://healgo-backend.onrender.com/api/orders/my-orders/${currentUser._id}`,
       );
-
       setMyOrders(data);
     } catch (error) {
       console.error(error);
@@ -98,9 +117,7 @@ function App() {
 
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
-
       setUser(parsedUser);
-
       fetchMyOrders(parsedUser);
     }
 
@@ -124,10 +141,17 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveBanner((prev) => (prev + 1) % banners.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
   const googleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
-
       const googleUser = result.user;
 
       const { data } = await axios.post(
@@ -139,28 +163,21 @@ function App() {
       );
 
       localStorage.setItem("healgoUser", JSON.stringify(data));
-
       setUser(data);
-
       fetchMyOrders(data);
-
       setShowAuth(false);
 
       toast.success("Google Login Successful");
     } catch (error) {
       console.log(error);
-
       toast.error("Google Login Failed");
     }
   };
 
   const logoutUser = () => {
     localStorage.removeItem("healgoUser");
-
     setUser(null);
-
     setShowAdmin(false);
-
     toast.success("Logged out successfully");
   };
 
@@ -226,7 +243,6 @@ function App() {
       fetchMedicines();
     } catch (error) {
       console.log(error);
-
       toast.error("Medicine Add Failed");
     }
   };
@@ -234,9 +250,12 @@ function App() {
   const addToCart = (medicine) => {
     if (!user) {
       setShowAuth(true);
-
       toast.error("Please login first");
+      return;
+    }
 
+    if (medicine.stock <= 0) {
+      toast.error("Out of stock");
       return;
     }
 
@@ -260,9 +279,28 @@ function App() {
     toast.success("Added to Cart");
   };
 
+  const increaseQuantity = (id) => {
+    setCart(
+      cart.map((item) =>
+        item._id === id ? { ...item, quantity: item.quantity + 1 } : item,
+      ),
+    );
+  };
+
+  const decreaseQuantity = (id) => {
+    setCart(
+      cart
+        .map((item) =>
+          item._id === id
+            ? { ...item, quantity: Math.max(item.quantity - 1, 0) }
+            : item,
+        )
+        .filter((item) => item.quantity > 0),
+    );
+  };
+
   const removeFromCart = (id) => {
     setCart(cart.filter((item) => item._id !== id));
-
     toast.success("Removed from Cart");
   };
 
@@ -270,6 +308,10 @@ function App() {
     (total, item) => total + item.price * item.quantity,
     0,
   );
+
+  const deliveryFee = cartTotal > 499 || cartTotal === 0 ? 0 : 40;
+  const grandTotal = cartTotal + deliveryFee;
+  const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const filteredMedicines = medicines.filter((med) => {
     const matchesSearch = med.name
@@ -281,6 +323,11 @@ function App() {
 
     return matchesSearch && matchesCategory;
   });
+
+  const getCartItemQuantity = (id) => {
+    const item = cart.find((cartItem) => cartItem._id === id);
+    return item ? item.quantity : 0;
+  };
 
   return (
     <div className={darkMode ? "app dark" : "app"}>
@@ -301,15 +348,37 @@ function App() {
 
           <button
             className="cart-top-btn"
-            onClick={() => setShowCart(!showCart)}
+            onClick={() => {
+              setShowCart(!showCart);
+              setShowAdmin(false);
+              setShowMyOrders(false);
+            }}
           >
-            🛒 Cart ({cart.length})
+            🛒 Cart ({totalCartItems})
           </button>
+
+          {user && (
+            <button
+              className="cart-top-btn"
+              onClick={() => {
+                setShowMyOrders(!showMyOrders);
+                setShowCart(false);
+                setShowAdmin(false);
+                fetchMyOrders(user);
+              }}
+            >
+              📦 My Orders
+            </button>
+          )}
 
           {user && user.role === "admin" && (
             <button
               className="login-btn"
-              onClick={() => setShowAdmin(!showAdmin)}
+              onClick={() => {
+                setShowAdmin(!showAdmin);
+                setShowCart(false);
+                setShowMyOrders(false);
+              }}
             >
               Admin Dashboard
             </button>
@@ -347,13 +416,82 @@ function App() {
         </section>
       )}
 
+      {selectedMedicine && (
+        <section className="modal-overlay">
+          <div className="product-modal">
+            <button
+              className="close-auth"
+              onClick={() => setSelectedMedicine(null)}
+            >
+              ×
+            </button>
+
+            <div className="modal-image">
+              {selectedMedicine.image ? (
+                <img src={selectedMedicine.image} alt={selectedMedicine.name} />
+              ) : (
+                <span>💊</span>
+              )}
+            </div>
+
+            <div className="modal-info">
+              <span className="product-badge">Verified Product</span>
+              <h2>{selectedMedicine.name}</h2>
+              <p className="category">{selectedMedicine.category}</p>
+              <p className="desc">{selectedMedicine.description}</p>
+
+              <div className="modal-stats">
+                <div>
+                  <strong>₹{selectedMedicine.price}</strong>
+                  <span>Price</span>
+                </div>
+                <div>
+                  <strong>{selectedMedicine.stock}</strong>
+                  <span>Stock</span>
+                </div>
+                <div>
+                  <strong>4.8★</strong>
+                  <span>Rating</span>
+                </div>
+              </div>
+
+              <button
+                className="cart-btn"
+                onClick={() => {
+                  addToCart(selectedMedicine);
+                  setSelectedMedicine(null);
+                }}
+              >
+                Add to Cart
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       {showAdmin && (
         <section className="medicine-section">
           <div className="section-header">
             <div>
               <h2>Admin Dashboard</h2>
-
               <p>Add and manage medicines</p>
+            </div>
+          </div>
+
+          <div className="admin-layout">
+            <div className="stat-card">
+              <h3>{medicines.length}</h3>
+              <p>Total Medicines</p>
+            </div>
+
+            <div className="stat-card">
+              <h3>{orders.length}</h3>
+              <p>Total Orders</p>
+            </div>
+
+            <div className="stat-card">
+              <h3>{pharmacyCategories.length - 1}</h3>
+              <p>Categories</p>
             </div>
           </div>
 
@@ -374,19 +512,12 @@ function App() {
               className="admin-input"
             >
               <option value="">Select Category</option>
-
               <option>Generic Medicines</option>
-
               <option>Skin Care</option>
-
               <option>Nutritional Drinks</option>
-
               <option>Health Supplements</option>
-
               <option>Hair Care</option>
-
               <option>Pain Relief</option>
-
               <option>Ayurveda Products</option>
             </select>
 
@@ -427,96 +558,146 @@ function App() {
         </section>
       )}
 
+      {showMyOrders && (
+        <section className="medicine-section">
+          <div className="section-header">
+            <div>
+              <h2>My Orders</h2>
+              <p>Your recent medicine orders</p>
+            </div>
+          </div>
+
+          {myOrders.length === 0 ? (
+            <div className="empty-box">
+              <h3>No orders yet</h3>
+              <p>Your orders will appear here after checkout.</p>
+            </div>
+          ) : (
+            <div className="medicine-grid">
+              {myOrders.map((order) => (
+                <div className="medicine-card" key={order._id}>
+                  <h3>Order #{order._id?.slice(-6)}</h3>
+                  <p className="category">{order.status || "Pending"}</p>
+                  <p className="desc">
+                    Total: ₹{order.totalAmount || order.total || 0}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
       {showCart && (
         <section className="medicine-section">
           <div className="section-header">
             <div>
               <h2>Your Cart</h2>
-
-              <p>{cart.length} products added</p>
+              <p>{totalCartItems} products added</p>
             </div>
           </div>
 
           {cart.length === 0 ? (
-            <p>Cart is empty.</p>
+            <div className="empty-box">
+              <h3>🛒 Cart is empty</h3>
+              <p>Add medicines and healthcare products to continue.</p>
+            </div>
           ) : (
             <>
-              <div className="medicine-grid">
-                {cart.map((item) => (
-                  <div className="medicine-card" key={item._id}>
-                    <div className="image-box">
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} />
-                      ) : (
-                        <span>💊</span>
-                      )}
+              <div className="cart-layout">
+                <div className="cart-items">
+                  {cart.map((item) => (
+                    <div className="cart-item" key={item._id}>
+                      <div className="cart-item-img">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} />
+                        ) : (
+                          <span>💊</span>
+                        )}
+                      </div>
+
+                      <div className="cart-item-info">
+                        <h3>{item.name}</h3>
+                        <p>{item.category}</p>
+                        <h4>₹{item.price}</h4>
+
+                        <div className="qty-row">
+                          <button onClick={() => decreaseQuantity(item._id)}>
+                            -
+                          </button>
+                          <span>{item.quantity}</span>
+                          <button onClick={() => increaseQuantity(item._id)}>
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        className="remove-mini"
+                        onClick={() => removeFromCart(item._id)}
+                      >
+                        Remove
+                      </button>
                     </div>
+                  ))}
+                </div>
 
-                    <h3>{item.name}</h3>
+                <div className="checkout-card">
+                  <h3>Checkout Details</h3>
 
-                    <p className="desc">Quantity: {item.quantity}</p>
+                  <input
+                    type="text"
+                    placeholder="Your Name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="admin-input"
+                  />
 
-                    <div className="price-row">
-                      <h4>₹{item.price * item.quantity}</h4>
-                    </div>
+                  <input
+                    type="text"
+                    placeholder="Phone Number"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="admin-input"
+                  />
 
-                    <button
-                      className="logout-btn"
-                      onClick={() => removeFromCart(item._id)}
-                    >
-                      Remove
-                    </button>
+                  <textarea
+                    placeholder="Delivery Address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="admin-input"
+                  />
+
+                  <label className="upload-label">
+                    Upload Prescription if needed
+                  </label>
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handlePrescriptionUpload}
+                    className="admin-input"
+                  />
+
+                  <div className="bill-box">
+                    <p>
+                      <span>Subtotal</span>
+                      <strong>₹{cartTotal}</strong>
+                    </p>
+                    <p>
+                      <span>Delivery Fee</span>
+                      <strong>
+                        {deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`}
+                      </strong>
+                    </p>
+                    <p className="grand-total">
+                      <span>Total</span>
+                      <strong>₹{grandTotal}</strong>
+                    </p>
                   </div>
-                ))}
-              </div>
 
-              <div
-                className="hero-card"
-                style={{
-                  marginTop: "30px",
-                }}
-              >
-                <h3>Checkout Details</h3>
-
-                <input
-                  type="text"
-                  placeholder="Your Name"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="admin-input"
-                />
-
-                <input
-                  type="text"
-                  placeholder="Phone Number"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="admin-input"
-                />
-
-                <textarea
-                  placeholder="Delivery Address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="admin-input"
-                />
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePrescriptionUpload}
-                  className="admin-input"
-                />
-
-                <h2
-                  style={{
-                    marginTop: "20px",
-                  }}
-                >
-                  Total: ₹{cartTotal}
-                </h2>
-
-                <button className="cart-btn">Place Order</button>
+                  <button className="cart-btn">Place Order</button>
+                </div>
               </div>
             </>
           )}
@@ -525,14 +706,11 @@ function App() {
 
       <section className="hero">
         <div className="hero-text">
-          <span className="badge">30 Minute Delivery</span>
+          <span className="badge">{banners[activeBanner].badge}</span>
 
-          <h1>India's Modern Online Pharmacy</h1>
+          <h1>{banners[activeBanner].title}</h1>
 
-          <p>
-            Browse medicines, wellness products, healthcare supplements and more
-            with HealGo.
-          </p>
+          <p>{banners[activeBanner].text}</p>
 
           <div className="search-box">
             <input
@@ -544,17 +722,24 @@ function App() {
 
             <button>Search</button>
           </div>
+
+          <div className="banner-dots">
+            {banners.map((_, index) => (
+              <button
+                key={index}
+                className={activeBanner === index ? "dot active-dot" : "dot"}
+                onClick={() => setActiveBanner(index)}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className="hero-card">
+        <div className="hero-card premium-hero-card">
+          <div className="hero-emoji">{banners[activeBanner].emoji}</div>
           <h3>Why HealGo?</h3>
-
           <p>✅ Genuine medicines</p>
-
           <p>✅ Fast delivery</p>
-
           <p>✅ Healthcare products</p>
-
           <p>✅ Trusted pharmacy</p>
         </div>
       </section>
@@ -563,7 +748,6 @@ function App() {
         <div className="section-header">
           <div>
             <h2>Popular Categories</h2>
-
             <p>Explore products category wise</p>
           </div>
         </div>
@@ -580,7 +764,6 @@ function App() {
               onClick={() => setSelectedCategory(cat.name)}
             >
               <span>{cat.icon}</span>
-
               <p>{cat.name}</p>
             </button>
           ))}
@@ -601,43 +784,108 @@ function App() {
             <div className="section-header">
               <div>
                 <h2>{cat.name}</h2>
-
                 <p>{categoryProducts.length} products</p>
               </div>
             </div>
 
             <div className="medicine-grid">
-              {categoryProducts.map((med) => (
-                <div className="medicine-card" key={med._id}>
-                  <div className="image-box">
-                    {med.image ? (
-                      <img src={med.image} alt={med.name} />
+              {categoryProducts.map((med) => {
+                const quantity = getCartItemQuantity(med._id);
+
+                return (
+                  <div className="medicine-card" key={med._id}>
+                    <span className="product-badge">Best Seller</span>
+
+                    <div
+                      className="image-box"
+                      onClick={() => setSelectedMedicine(med)}
+                    >
+                      {med.image ? (
+                        <img src={med.image} alt={med.name} />
+                      ) : (
+                        <span>💊</span>
+                      )}
+                    </div>
+
+                    <h3 onClick={() => setSelectedMedicine(med)}>{med.name}</h3>
+
+                    <p className="category">{med.category}</p>
+
+                    <p className="desc">{med.description}</p>
+
+                    <div className="price-row">
+                      <h4>₹{med.price}</h4>
+                      <span
+                        className={med.stock <= 0 ? "stock-out" : "stock-in"}
+                      >
+                        {med.stock <= 0
+                          ? "Out of Stock"
+                          : `Stock: ${med.stock}`}
+                      </span>
+                    </div>
+
+                    {quantity > 0 ? (
+                      <div className="qty-row card-qty">
+                        <button onClick={() => decreaseQuantity(med._id)}>
+                          -
+                        </button>
+                        <span>{quantity}</span>
+                        <button onClick={() => increaseQuantity(med._id)}>
+                          +
+                        </button>
+                      </div>
                     ) : (
-                      <span>💊</span>
+                      <button
+                        className="cart-btn"
+                        onClick={() => addToCart(med)}
+                        disabled={med.stock <= 0}
+                      >
+                        {med.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                      </button>
                     )}
                   </div>
-
-                  <h3>{med.name}</h3>
-
-                  <p className="category">{med.category}</p>
-
-                  <p className="desc">{med.description}</p>
-
-                  <div className="price-row">
-                    <h4>₹{med.price}</h4>
-
-                    <span>Stock: {med.stock}</span>
-                  </div>
-
-                  <button className="cart-btn" onClick={() => addToCart(med)}>
-                    Add to Cart
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         );
       })}
+
+      <footer className="footer">
+        <div>
+          <h2>HealGo</h2>
+          <p>Fast Medicine Delivery</p>
+        </div>
+
+        <div>
+          <h4>Company</h4>
+          <p>About HealGo</p>
+          <p>Contact Us</p>
+          <p>Careers</p>
+        </div>
+
+        <div>
+          <h4>Legal</h4>
+          <p>Privacy Policy</p>
+          <p>Terms & Conditions</p>
+          <p>Refund Policy</p>
+        </div>
+
+        <div>
+          <h4>Support</h4>
+          <p>Email: support@healgo.in</p>
+          <p>Delivery: 30–60 minutes</p>
+          <p>Prescription support available</p>
+        </div>
+      </footer>
+
+      {cart.length > 0 && (
+        <div className="mobile-cart-bar" onClick={() => setShowCart(true)}>
+          <span>🛒 {totalCartItems} Items</span>
+          <strong>₹{grandTotal}</strong>
+          <button>Checkout</button>
+        </div>
+      )}
 
       <ToastContainer position="top-right" autoClose={2500} />
     </div>
