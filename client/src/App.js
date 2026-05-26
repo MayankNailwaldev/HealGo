@@ -27,6 +27,8 @@ function App() {
 
   const [user, setUser] = useState(null);
 
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -39,15 +41,26 @@ function App() {
   const [medDescription, setMedDescription] = useState("");
   const [medImage, setMedImage] = useState("");
 
-  // --- 1. DEFINE FUNCTIONS FIRST TO PREVENT INITIALIZATION ERRORS ---
+  const pharmacyCategories = [
+    { name: "All", icon: "🛍️" },
+    { name: "Generic Medicines", icon: "💊" },
+    { name: "Skin Care", icon: "🧴" },
+    { name: "Nutritional Drinks", icon: "🥤" },
+    { name: "Health Supplements", icon: "💪" },
+    { name: "Hair Care", icon: "✨" },
+    { name: "Pain Relief", icon: "🩹" },
+    { name: "Ayurveda Products", icon: "🌿" },
+  ];
+
   const fetchMedicines = async () => {
     try {
       const { data } = await axios.get(
         "https://healgo-backend.onrender.com/api/medicines",
       );
+
       setMedicines(data);
     } catch (error) {
-      console.error("Error fetching medicines:", error);
+      console.error(error);
     }
   };
 
@@ -56,33 +69,38 @@ function App() {
       const { data } = await axios.get(
         "https://healgo-backend.onrender.com/api/orders",
       );
+
       setOrders(data);
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      console.error(error);
     }
   };
 
   const fetchMyOrders = async (currentUser = user) => {
     if (!currentUser || !currentUser._id) return;
+
     try {
       const { data } = await axios.get(
         `https://healgo-backend.onrender.com/api/orders/my-orders/${currentUser._id}`,
       );
+
       setMyOrders(data);
     } catch (error) {
-      console.error("Error fetching user orders:", error);
+      console.error(error);
     }
   };
 
-  // --- 2. HOOKS RUN SAFE AFTER FUNCTIONS ARE INITIALIZED ---
   useEffect(() => {
     fetchMedicines();
     fetchOrders();
 
     const savedUser = localStorage.getItem("healgoUser");
+
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
+
       setUser(parsedUser);
+
       fetchMyOrders(parsedUser);
     }
 
@@ -92,7 +110,12 @@ function App() {
 
     socket.on("orderUpdated", () => {
       fetchOrders();
-      fetchMyOrders();
+
+      const savedUser = localStorage.getItem("healgoUser");
+
+      if (savedUser) {
+        fetchMyOrders(JSON.parse(savedUser));
+      }
     });
 
     return () => {
@@ -101,11 +124,10 @@ function App() {
     };
   }, []);
 
-  // (REMOVED THE LOOSE LOCALSTORAGE GET/SET BLOCK THAT WAS CAUSING LOOPS HERE)
-
   const googleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
+
       const googleUser = result.user;
 
       const { data } = await axios.post(
@@ -117,43 +139,56 @@ function App() {
       );
 
       localStorage.setItem("healgoUser", JSON.stringify(data));
+
       setUser(data);
+
       fetchMyOrders(data);
+
       setShowAuth(false);
 
       toast.success("Google Login Successful");
     } catch (error) {
       console.log(error);
+
       toast.error("Google Login Failed");
     }
   };
 
   const logoutUser = () => {
     localStorage.removeItem("healgoUser");
+
     setUser(null);
+
     setShowAdmin(false);
-    setShowCart(false);
-    setShowMyOrders(false);
-    setMyOrders([]);
 
     toast.success("Logged out successfully");
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
+
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onloadend = () => setMedImage(reader.result);
+
+    reader.onloadend = () => {
+      setMedImage(reader.result);
+    };
+
     reader.readAsDataURL(file);
   };
 
   const handlePrescriptionUpload = (e) => {
     const file = e.target.files[0];
+
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onloadend = () => setPrescriptionImage(reader.result);
+
+    reader.onloadend = () => {
+      setPrescriptionImage(reader.result);
+    };
+
     reader.readAsDataURL(file);
   };
 
@@ -191,83 +226,17 @@ function App() {
       fetchMedicines();
     } catch (error) {
       console.log(error);
+
       toast.error("Medicine Add Failed");
-    }
-  };
-
-  const deleteMedicine = async (id) => {
-    try {
-      const token = user?.token;
-
-      await axios.delete(
-        `https://healgo-backend.onrender.com/api/medicines/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      toast.success("Medicine Deleted");
-      fetchMedicines();
-    } catch (error) {
-      console.log(error);
-      toast.error("Delete Failed");
-    }
-  };
-
-  const updateMedicine = async (id) => {
-    try {
-      const newPrice = prompt("Enter new price:");
-      const newStock = prompt("Enter new stock:");
-
-      if (!newPrice || !newStock) return;
-
-      const token = user?.token;
-
-      await axios.put(
-        `https://healgo-backend.onrender.com/api/medicines/${id}`,
-        {
-          price: Number(newPrice),
-          stock: Number(newStock),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      toast.success("Medicine Updated");
-      fetchMedicines();
-    } catch (error) {
-      console.log(error);
-      toast.error("Update Failed");
-    }
-  };
-
-  const updateStatus = async (orderId, status) => {
-    try {
-      await axios.put(
-        `https://healgo-backend.onrender.com/api/orders/${orderId}/status`,
-        {
-          status,
-        },
-      );
-
-      toast.success("Order Status Updated");
-      fetchOrders();
-      fetchMyOrders();
-    } catch (error) {
-      console.log(error);
-      toast.error("Status Update Failed");
     }
   };
 
   const addToCart = (medicine) => {
     if (!user) {
       setShowAuth(true);
+
       toast.error("Please login first");
+
       return;
     }
 
@@ -277,7 +246,10 @@ function App() {
       setCart(
         cart.map((item) =>
           item._id === medicine._id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+              }
             : item,
         ),
       );
@@ -290,6 +262,7 @@ function App() {
 
   const removeFromCart = (id) => {
     setCart(cart.filter((item) => item._id !== id));
+
     toast.success("Removed from Cart");
   };
 
@@ -298,120 +271,23 @@ function App() {
     0,
   );
 
-  const placeOrder = async () => {
-    if (!user) {
-      setShowAuth(true);
-      toast.error("Please login first");
-      return;
-    }
+  const filteredMedicines = medicines.filter((med) => {
+    const matchesSearch = med.name
+      ?.toLowerCase()
+      .includes(search.toLowerCase());
 
-    try {
-      const { data } = await axios.post(
-        "https://healgo-backend.onrender.com/api/orders",
-        {
-          userId: user._id,
-          customerEmail: user.email,
-          customerName,
-          phone,
-          address,
-          totalAmount: cartTotal,
-          paymentMethod: "Cash on Delivery",
-          prescriptionImage,
-          items: cart.map((item) => ({
-            medicineId: item._id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-          })),
-        },
-      );
+    const matchesCategory =
+      selectedCategory === "All" || med.category === selectedCategory;
 
-      toast.success(data.message);
-
-      setCart([]);
-      setCustomerName("");
-      setPhone("");
-      setAddress("");
-      setPrescriptionImage("");
-      setShowCart(false);
-
-      fetchOrders();
-      fetchMyOrders();
-    } catch (error) {
-      console.log(error);
-      toast.error("Order Failed");
-    }
-  };
-
-  const filteredMedicines = medicines.filter((med) =>
-    med.name.toLowerCase().includes(search.toLowerCase()),
-  );
-
-  const Timeline = ({ status }) => (
-    <div className="timeline">
-      <div
-        className={`timeline-step ${
-          ["Order Placed", "Packed", "Out for Delivery", "Delivered"].includes(
-            status,
-          )
-            ? "active-step"
-            : "inactive-step"
-        }`}
-      >
-        <div className="timeline-dot active"></div>
-        Order Placed
-      </div>
-
-      <div
-        className={`timeline-step ${
-          ["Packed", "Out for Delivery", "Delivered"].includes(status)
-            ? "active-step"
-            : "inactive-step"
-        }`}
-      >
-        <div
-          className={`timeline-dot ${
-            ["Packed", "Out for Delivery", "Delivered"].includes(status)
-              ? "active"
-              : ""
-          }`}
-        ></div>
-        Packed
-      </div>
-
-      <div
-        className={`timeline-step ${
-          ["Out for Delivery", "Delivered"].includes(status)
-            ? "active-step"
-            : "inactive-step"
-        }`}
-      >
-        <div
-          className={`timeline-dot ${
-            ["Out for Delivery", "Delivered"].includes(status) ? "active" : ""
-          }`}
-        ></div>
-        Out for Delivery
-      </div>
-
-      <div
-        className={`timeline-step ${
-          status === "Delivered" ? "active-step" : "inactive-step"
-        }`}
-      >
-        <div
-          className={`timeline-dot ${status === "Delivered" ? "active" : ""}`}
-        ></div>
-        Delivered
-      </div>
-    </div>
-  );
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className={darkMode ? "app dark" : "app"}>
       <nav className="navbar">
         <div className="logo">
           <span className="logo-icon">✚</span>
+
           <div>
             <h2>HealGo</h2>
             <p>Fast Medicine Delivery</p>
@@ -430,18 +306,6 @@ function App() {
             🛒 Cart ({cart.length})
           </button>
 
-          {user && (
-            <button
-              className="login-btn"
-              onClick={() => {
-                fetchMyOrders();
-                setShowMyOrders(!showMyOrders);
-              }}
-            >
-              My Orders
-            </button>
-          )}
-
           {user && user.role === "admin" && (
             <button
               className="login-btn"
@@ -454,6 +318,7 @@ function App() {
           {user ? (
             <>
               <span className="user-name">Hi, {user.name}</span>
+
               <button className="logout-btn" onClick={logoutUser}>
                 Logout
               </button>
@@ -474,6 +339,7 @@ function App() {
             </button>
 
             <h2>Secure Login</h2>
+
             <p>Use your Google account to continue with HealGo.</p>
 
             <button onClick={googleLogin}>Continue with Google</button>
@@ -482,22 +348,16 @@ function App() {
       )}
 
       {showAdmin && (
-        <section className="admin-panel">
-          <h2>📦 HealGo Admin Dashboard</h2>
+        <section className="medicine-section">
+          <div className="section-header">
+            <div>
+              <h2>Admin Dashboard</h2>
 
-          <div className="stats-grid">
-            <div className="stat-card">
-              <h3>{orders.length}</h3>
-              <p>Total Orders</p>
-            </div>
-
-            <div className="stat-card">
-              <h3>{medicines.length}</h3>
-              <p>Total Medicines</p>
+              <p>Add and manage medicines</p>
             </div>
           </div>
 
-          <div className="add-medicine-form">
+          <div className="hero-card">
             <h3>Add Medicine</h3>
 
             <input
@@ -505,20 +365,37 @@ function App() {
               placeholder="Medicine Name"
               value={medName}
               onChange={(e) => setMedName(e.target.value)}
+              className="admin-input"
             />
 
-            <input
-              type="text"
-              placeholder="Category"
+            <select
               value={medCategory}
               onChange={(e) => setMedCategory(e.target.value)}
-            />
+              className="admin-input"
+            >
+              <option value="">Select Category</option>
+
+              <option>Generic Medicines</option>
+
+              <option>Skin Care</option>
+
+              <option>Nutritional Drinks</option>
+
+              <option>Health Supplements</option>
+
+              <option>Hair Care</option>
+
+              <option>Pain Relief</option>
+
+              <option>Ayurveda Products</option>
+            </select>
 
             <input
               type="number"
               placeholder="Price"
               value={medPrice}
               onChange={(e) => setMedPrice(e.target.value)}
+              className="admin-input"
             />
 
             <input
@@ -526,161 +403,87 @@ function App() {
               placeholder="Stock"
               value={medStock}
               onChange={(e) => setMedStock(e.target.value)}
+              className="admin-input"
             />
 
             <textarea
               placeholder="Description"
               value={medDescription}
               onChange={(e) => setMedDescription(e.target.value)}
-            ></textarea>
+              className="admin-input"
+            />
 
-            <input type="file" accept="image/*" onChange={handleImageUpload} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="admin-input"
+            />
 
-            {medImage && (
-              <img className="image-preview" src={medImage} alt="Preview" />
-            )}
-
-            <button onClick={addMedicine}>Add Medicine</button>
+            <button className="cart-btn" onClick={addMedicine}>
+              Add Medicine
+            </button>
           </div>
-
-          <div className="orders-section">
-            <h3>Manage Medicines</h3>
-
-            {medicines.map((med) => (
-              <div className="order-card" key={med._id}>
-                <h4>{med.name}</h4>
-                <p>Category: {med.category}</p>
-                <p>Price: ₹{med.price}</p>
-                <p>Stock: {med.stock}</p>
-
-                <div className="medicine-actions">
-                  <button onClick={() => updateMedicine(med._id)}>
-                    Update
-                  </button>
-                  <button
-                    className="delete-btn"
-                    onClick={() => deleteMedicine(med._id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="orders-section">
-            <h3>Recent Orders</h3>
-
-            {orders.map((order) => (
-              <div className="order-card" key={order._id}>
-                <h4>{order.customerName}</h4>
-                <p>📞 {order.phone}</p>
-                <p>📍 {order.address}</p>
-                <p>💰 ₹{order.totalAmount}</p>
-                <p>💳 Payment: {order.paymentMethod}</p>
-                <p>Payment Status: {order.paymentStatus}</p>
-
-                {order.prescriptionImage && (
-                  <div>
-                    <p>📄 Prescription:</p>
-                    <img
-                      className="image-preview"
-                      src={order.prescriptionImage}
-                      alt="Prescription"
-                    />
-                  </div>
-                )}
-
-                <div className="status-row">
-                  <p>Status: {order.status}</p>
-
-                  <select
-                    value={order.status}
-                    onChange={(e) => updateStatus(order._id, e.target.value)}
-                  >
-                    <option>Order Placed</option>
-                    <option>Packed</option>
-                    <option>Out for Delivery</option>
-                    <option>Delivered</option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {showMyOrders && (
-        <section className="admin-panel">
-          <h2>📦 My Orders</h2>
-
-          {myOrders.length === 0 ? (
-            <p>No orders found.</p>
-          ) : (
-            myOrders.map((order) => (
-              <div className="order-card" key={order._id}>
-                <h4>Order Total: ₹{order.totalAmount}</h4>
-                <p>💳 Payment: {order.paymentMethod}</p>
-                <p>Payment Status: {order.paymentStatus}</p>
-                <p>🚚 Status: {order.status}</p>
-
-                <Timeline status={order.status} />
-
-                <p>📍 {order.address}</p>
-
-                {order.prescriptionImage && (
-                  <div>
-                    <p>📄 Prescription Uploaded</p>
-                    <img
-                      className="image-preview"
-                      src={order.prescriptionImage}
-                      alt="Prescription"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  {order.items.map((item, index) => (
-                    <p key={index}>
-                      {item.name} × {item.quantity}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ))
-          )}
         </section>
       )}
 
       {showCart && (
-        <section className="cart-panel">
-          <h2>Your Cart</h2>
+        <section className="medicine-section">
+          <div className="section-header">
+            <div>
+              <h2>Your Cart</h2>
+
+              <p>{cart.length} products added</p>
+            </div>
+          </div>
 
           {cart.length === 0 ? (
-            <p>Your cart is empty.</p>
+            <p>Cart is empty.</p>
           ) : (
             <>
-              {cart.map((item) => (
-                <div className="cart-item" key={item._id}>
-                  <div>
-                    <h4>{item.name}</h4>
-                    <p>
-                      ₹{item.price} × {item.quantity}
-                    </p>
+              <div className="medicine-grid">
+                {cart.map((item) => (
+                  <div className="medicine-card" key={item._id}>
+                    <div className="image-box">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} />
+                      ) : (
+                        <span>💊</span>
+                      )}
+                    </div>
+
+                    <h3>{item.name}</h3>
+
+                    <p className="desc">Quantity: {item.quantity}</p>
+
+                    <div className="price-row">
+                      <h4>₹{item.price * item.quantity}</h4>
+                    </div>
+
+                    <button
+                      className="logout-btn"
+                      onClick={() => removeFromCart(item._id)}
+                    >
+                      Remove
+                    </button>
                   </div>
+                ))}
+              </div>
 
-                  <button onClick={() => removeFromCart(item._id)}>
-                    Remove
-                  </button>
-                </div>
-              ))}
+              <div
+                className="hero-card"
+                style={{
+                  marginTop: "30px",
+                }}
+              >
+                <h3>Checkout Details</h3>
 
-              <div className="checkout-form">
                 <input
                   type="text"
                   placeholder="Your Name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
+                  className="admin-input"
                 />
 
                 <input
@@ -688,34 +491,32 @@ function App() {
                   placeholder="Phone Number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  className="admin-input"
                 />
 
                 <textarea
                   placeholder="Delivery Address"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                ></textarea>
-
-                <p>Upload Prescription if required:</p>
+                  className="admin-input"
+                />
 
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handlePrescriptionUpload}
+                  className="admin-input"
                 />
 
-                {prescriptionImage && (
-                  <img
-                    className="image-preview"
-                    src={prescriptionImage}
-                    alt="Prescription Preview"
-                  />
-                )}
-              </div>
+                <h2
+                  style={{
+                    marginTop: "20px",
+                  }}
+                >
+                  Total: ₹{cartTotal}
+                </h2>
 
-              <div className="cart-total">
-                <h3>Total: ₹{cartTotal}</h3>
-                <button onClick={placeOrder}>Place Order (COD)</button>
+                <button className="cart-btn">Place Order</button>
               </div>
             </>
           )}
@@ -725,10 +526,12 @@ function App() {
       <section className="hero">
         <div className="hero-text">
           <span className="badge">30 Minute Delivery</span>
-          <h1>Fast Medicine Delivery at Your Doorstep</h1>
+
+          <h1>India's Modern Online Pharmacy</h1>
+
           <p>
-            Order genuine medicines online and get them delivered quickly with
-            HealGo.
+            Browse medicines, wellness products, healthcare supplements and more
+            with HealGo.
           </p>
 
           <div className="search-box">
@@ -745,46 +548,96 @@ function App() {
 
         <div className="hero-card">
           <h3>Why HealGo?</h3>
+
           <p>✅ Genuine medicines</p>
-          <p>✅ Secure checkout</p>
+
           <p>✅ Fast delivery</p>
-          <p>✅ Easy reorder</p>
+
+          <p>✅ Healthcare products</p>
+
+          <p>✅ Trusted pharmacy</p>
         </div>
       </section>
 
-      <section className="medicine-section">
+      <section className="category-showcase">
         <div className="section-header">
-          <h2>Popular Medicines</h2>
-          <p>{filteredMedicines.length} medicines available</p>
+          <div>
+            <h2>Popular Categories</h2>
+
+            <p>Explore products category wise</p>
+          </div>
         </div>
 
-        <div className="medicine-grid">
-          {filteredMedicines.map((med) => (
-            <div className="medicine-card" key={med._id}>
-              <div className="image-box">
-                {med.image ? (
-                  <img src={med.image} alt={med.name} />
-                ) : (
-                  <span>💊</span>
-                )}
-              </div>
+        <div className="category-showcase-grid">
+          {pharmacyCategories.map((cat) => (
+            <button
+              key={cat.name}
+              className={
+                selectedCategory === cat.name
+                  ? "category-showcase-card active-category-card"
+                  : "category-showcase-card"
+              }
+              onClick={() => setSelectedCategory(cat.name)}
+            >
+              <span>{cat.icon}</span>
 
-              <h3>{med.name}</h3>
-              <p className="category">{med.category}</p>
-              <p className="desc">{med.description}</p>
-
-              <div className="price-row">
-                <h4>₹{med.price}</h4>
-                <span>Stock: {med.stock}</span>
-              </div>
-
-              <button className="cart-btn" onClick={() => addToCart(med)}>
-                Add to Cart
-              </button>
-            </div>
+              <p>{cat.name}</p>
+            </button>
           ))}
         </div>
       </section>
+
+      {pharmacyCategories.map((cat) => {
+        if (cat.name === "All") return null;
+
+        const categoryProducts = filteredMedicines.filter(
+          (med) => med.category === cat.name,
+        );
+
+        if (categoryProducts.length === 0) return null;
+
+        return (
+          <section className="medicine-section" key={cat.name}>
+            <div className="section-header">
+              <div>
+                <h2>{cat.name}</h2>
+
+                <p>{categoryProducts.length} products</p>
+              </div>
+            </div>
+
+            <div className="medicine-grid">
+              {categoryProducts.map((med) => (
+                <div className="medicine-card" key={med._id}>
+                  <div className="image-box">
+                    {med.image ? (
+                      <img src={med.image} alt={med.name} />
+                    ) : (
+                      <span>💊</span>
+                    )}
+                  </div>
+
+                  <h3>{med.name}</h3>
+
+                  <p className="category">{med.category}</p>
+
+                  <p className="desc">{med.description}</p>
+
+                  <div className="price-row">
+                    <h4>₹{med.price}</h4>
+
+                    <span>Stock: {med.stock}</span>
+                  </div>
+
+                  <button className="cart-btn" onClick={() => addToCart(med)}>
+                    Add to Cart
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       <ToastContainer position="top-right" autoClose={2500} />
     </div>

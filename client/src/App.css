@@ -8,15 +8,14 @@
 }
 
 body {
-  background: #f0fdf4;
+  background: #f4f7fb;
 }
 
 .app {
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.22), transparent 35%),
-    radial-gradient(circle at top right, rgba(34, 197, 94, 0.2), transparent 30%),
-    linear-gradient(135deg, #f8fafc, #ecfdf5);
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 35%),
+    linear-gradient(135deg, #f8fafc, #eefdf7);
   color: #0f172a;
 }
 
@@ -30,10 +29,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(22px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
 }
 
 .logo {
@@ -43,28 +42,26 @@ body {
 }
 
 .logo-icon {
-  width: 54px;
-  height: 54px;
+  width: 58px;
+  height: 58px;
   display: grid;
   place-items: center;
-  border-radius: 18px;
+  border-radius: 20px;
   background: linear-gradient(135deg, #00a86b, #14b8a6);
   color: white;
-  font-size: 28px;
-  box-shadow: 0 14px 30px rgba(0, 168, 107, 0.35);
+  font-size: 30px;
+  font-weight: 900;
 }
 
 .logo h2 {
-  font-size: 28px;
-  font-weight: 900;
+  font-size: 34px;
   color: #00a86b;
-  letter-spacing: -1px;
+  font-weight: 900;
 }
 
 .logo p {
   color: #64748b;
   font-size: 13px;
-  font-weight: 600;
 }
 
 .nav-links {
@@ -78,15 +75,20 @@ body {
 .cart-top-btn,
 .dark-btn {
   border: none;
-  padding: 12px 18px;
+  padding: 12px 20px;
   border-radius: 999px;
   cursor: pointer;
   font-weight: 800;
-  transition: 0.25s ease;
+  transition: 0.25s;
 }
 
 .login-btn {
   background: linear-gradient(135deg, #00a86b, #14b8a6);
+  color: white;
+}
+
+.logout-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
 }
 
@@ -96,19 +98,14 @@ body {
   color: white;
 }
 
-.logout-btn {
-  background: linear-gradient(135deg, #ef4444, #be123c);
-  color: white;
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15);
 }
 
 .user-name {
-  color: #047857;
   font-weight: 900;
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+  color: #00a86b;
 }
 
 /* HERO */
@@ -116,49 +113,46 @@ button:hover {
 .hero {
   padding: 80px 52px 60px;
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 42px;
+  grid-template-columns: 1fr 360px;
+  gap: 40px;
   align-items: center;
 }
 
 .badge {
   display: inline-flex;
-  background: rgba(209, 250, 229, 0.95);
+  align-items: center;
+  gap: 8px;
+  background: #d1fae5;
   color: #047857;
   padding: 10px 18px;
   border-radius: 999px;
   font-weight: 900;
-  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .hero-text h1 {
   margin-top: 24px;
-  max-width: 760px;
-  font-size: clamp(42px, 6vw, 72px);
-  line-height: 1.02;
+  font-size: clamp(50px, 6vw, 82px);
+  line-height: 1.05;
   font-weight: 900;
   letter-spacing: -3px;
 }
 
 .hero-text p {
-  margin-top: 22px;
-  max-width: 640px;
+  margin-top: 20px;
+  max-width: 650px;
   color: #475569;
   line-height: 1.8;
-  font-size: 17px;
-  font-weight: 500;
+  font-size: 18px;
 }
 
 .search-box {
-  margin-top: 34px;
-  max-width: 650px;
+  margin-top: 36px;
   display: flex;
   gap: 12px;
-  padding: 10px;
-  border-radius: 22px;
   background: white;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.12);
+  padding: 10px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
 }
 
 .search-box input {
@@ -166,13 +160,13 @@ button:hover {
   border: none;
   outline: none;
   padding: 16px;
-  font-size: 15px;
   background: transparent;
+  font-size: 15px;
 }
 
 .search-box button {
   border: none;
-  padding: 0 30px;
+  padding: 0 28px;
   border-radius: 16px;
   background: linear-gradient(135deg, #00a86b, #14b8a6);
   color: white;
@@ -181,17 +175,16 @@ button:hover {
 }
 
 .hero-card {
+  background: rgba(255, 255, 255, 0.94);
   padding: 34px;
   border-radius: 32px;
-  background: rgba(255, 255, 255, 0.86);
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.13);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.1);
 }
 
 .hero-card h3 {
   color: #00a86b;
-  font-size: 26px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
+  font-size: 30px;
 }
 
 .hero-card p {
@@ -200,10 +193,10 @@ button:hover {
   font-weight: 700;
 }
 
-/* MEDICINES */
+/* CATEGORY */
 
-.medicine-section {
-  padding: 0 52px 80px;
+.category-showcase {
+  padding: 0 52px 60px;
 }
 
 .section-header {
@@ -213,13 +206,56 @@ button:hover {
 .section-header h2 {
   font-size: 40px;
   font-weight: 900;
-  letter-spacing: -1px;
 }
 
 .section-header p {
   margin-top: 8px;
   color: #64748b;
-  font-weight: 600;
+}
+
+.category-showcase-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 22px;
+}
+
+.category-showcase-card {
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 28px;
+  padding: 28px 18px;
+  cursor: pointer;
+  transition: 0.25s;
+  text-align: center;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+}
+
+.category-showcase-card span {
+  font-size: 50px;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.category-showcase-card p {
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.category-showcase-card:hover,
+.active-category-card {
+  transform: translateY(-6px);
+  background: linear-gradient(135deg, #00a86b, #14b8a6);
+}
+
+.category-showcase-card:hover p,
+.active-category-card p {
+  color: white;
+}
+
+/* MEDICINES */
+
+.medicine-section {
+  padding: 0 52px 70px;
 }
 
 .medicine-grid {
@@ -229,17 +265,13 @@ button:hover {
 }
 
 .medicine-card {
-  min-height: 465px;
-  display: flex;
-  flex-direction: column;
-  padding: 18px;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.09);
-  transition: 0.25s ease;
-  position: relative;
+  padding: 18px;
+  transition: 0.25s;
+  box-shadow: 0 18px 55px rgba(15, 23, 42, 0.08);
   overflow: hidden;
+  position: relative;
 }
 
 .medicine-card::before {
@@ -252,23 +284,19 @@ button:hover {
 
 .medicine-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 30px 75px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.15);
 }
 
 .image-box {
-  height: 155px;
+  height: 180px;
   border-radius: 24px;
   background:
-    radial-gradient(circle, rgba(20, 184, 166, 0.16), transparent 55%),
+    radial-gradient(circle, rgba(20, 184, 166, 0.15), transparent 60%),
     #f8fafc;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   overflow: hidden;
-}
-
-.image-box span {
-  font-size: 58px;
 }
 
 .image-box img {
@@ -277,25 +305,29 @@ button:hover {
   object-fit: contain;
 }
 
+.image-box span {
+  font-size: 56px;
+}
+
 .medicine-card h3 {
-  margin-top: 16px;
-  font-size: 20px;
-  font-weight: 900;
+  margin-top: 18px;
+  font-size: 21px;
   line-height: 1.35;
+  font-weight: 900;
 }
 
 .category {
   margin-top: 8px;
-  color: #059669;
+  color: #00a86b;
   font-weight: 900;
 }
 
 .desc {
-  margin-top: 10px;
+  margin-top: 12px;
   color: #64748b;
+  line-height: 1.7;
   font-size: 14px;
-  line-height: 1.6;
-  flex: 1;
+  min-height: 70px;
 }
 
 .price-row {
@@ -303,29 +335,28 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
 }
 
 .price-row h4 {
-  font-size: 25px;
   color: #00a86b;
+  font-size: 28px;
   font-weight: 900;
 }
 
 .price-row span {
-  padding: 8px 11px;
+  padding: 8px 12px;
   border-radius: 999px;
   background: #ecfdf5;
   color: #047857;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
 .cart-btn {
   width: 100%;
-  margin-top: 18px;
-  padding: 15px;
+  margin-top: 20px;
   border: none;
+  padding: 15px;
   border-radius: 18px;
   background: linear-gradient(135deg, #00a86b, #14b8a6);
   color: white;
@@ -334,188 +365,16 @@ button:hover {
   cursor: pointer;
 }
 
-/* PANELS */
+/* ADMIN */
 
-.cart-panel,
-.admin-panel {
-  margin: 38px 52px;
-  padding: 34px;
-  border-radius: 32px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.12);
-}
-
-.cart-panel h2,
-.admin-panel h2 {
-  margin-bottom: 26px;
-  color: #00a86b;
-  font-size: 30px;
-  font-weight: 900;
-}
-
-.cart-item,
-.order-card {
-  margin-top: 16px;
-  padding: 20px;
-  border-radius: 24px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.cart-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cart-item h4 {
-  font-size: 18px;
-}
-
-.cart-item p,
-.order-card p {
-  margin-top: 8px;
-  color: #475569;
-  font-weight: 500;
-}
-
-.cart-item button {
-  border: none;
-  padding: 11px 16px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #ef4444, #be123c);
-  color: white;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.checkout-form {
-  margin-top: 28px;
-}
-
-.checkout-form input,
-.checkout-form textarea,
-.add-medicine-form input,
-.add-medicine-form textarea,
-.status-row select {
+.admin-input {
   width: 100%;
   margin-top: 14px;
-  padding: 15px 16px;
+  padding: 15px;
   border-radius: 16px;
   border: 1px solid #cbd5e1;
   outline: none;
-  background: white;
   font-size: 14px;
-}
-
-.checkout-form input:focus,
-.checkout-form textarea:focus,
-.add-medicine-form input:focus,
-.add-medicine-form textarea:focus {
-  border-color: #00a86b;
-  box-shadow: 0 0 0 5px rgba(0, 168, 107, 0.12);
-}
-
-.cart-total {
-  margin-top: 28px;
-}
-
-.cart-total h3 {
-  font-size: 26px;
-}
-
-.cart-total button,
-.add-medicine-form button {
-  width: 100%;
-  margin-top: 18px;
-  padding: 16px;
-  border: none;
-  border-radius: 18px;
-  background: linear-gradient(135deg, #00a86b, #14b8a6);
-  color: white;
-  font-size: 17px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-/* ADMIN */
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 22px;
-  margin-bottom: 38px;
-}
-
-.stat-card {
-  padding: 30px;
-  border-radius: 28px;
-  background: linear-gradient(135deg, #dcfce7, #ccfbf1);
-  border: 1px solid rgba(16, 185, 129, 0.22);
-}
-
-.stat-card h3 {
-  font-size: 48px;
-  color: #00a86b;
-  font-weight: 900;
-}
-
-.stat-card p {
-  margin-top: 5px;
-  color: #047857;
-  font-weight: 800;
-}
-
-.add-medicine-form {
-  margin-bottom: 48px;
-}
-
-.add-medicine-form h3,
-.orders-section h3 {
-  font-size: 24px;
-  margin-bottom: 10px;
-}
-
-.order-card {
-  border-left: 6px solid #00a86b;
-}
-
-.status-row {
-  margin-top: 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-}
-
-.medicine-actions {
-  margin-top: 18px;
-  display: flex;
-  gap: 12px;
-}
-
-.medicine-actions button {
-  flex: 1;
-  padding: 13px;
-  border: none;
-  border-radius: 16px;
-  background: #00a86b;
-  color: white;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.delete-btn {
-  background: linear-gradient(135deg, #ef4444, #be123c) !important;
-}
-
-.image-preview {
-  width: 230px;
-  max-width: 100%;
-  margin-top: 18px;
-  border-radius: 18px;
-  border: 1px solid #e2e8f0;
 }
 
 /* AUTH */
@@ -524,29 +383,30 @@ button:hover {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(15, 23, 42, 0.68);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .auth-card {
-  width: 430px;
-  padding: 34px;
-  border-radius: 32px;
-  position: relative;
+  width: 420px;
+  max-width: 92%;
   background: white;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
+  padding: 34px;
+  border-radius: 30px;
+  position: relative;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.24);
 }
 
 .auth-card h2 {
   font-size: 30px;
   font-weight: 900;
-  margin-bottom: 10px;
 }
 
 .auth-card p {
+  margin-top: 12px;
   color: #64748b;
   line-height: 1.7;
 }
@@ -554,11 +414,12 @@ button:hover {
 .auth-card button {
   width: 100%;
   margin-top: 24px;
-  padding: 15px;
   border: none;
+  padding: 15px;
   border-radius: 18px;
   background: linear-gradient(135deg, #00a86b, #14b8a6);
   color: white;
+  font-size: 15px;
   font-weight: 900;
   cursor: pointer;
 }
@@ -567,93 +428,50 @@ button:hover {
   position: absolute;
   top: 14px;
   right: 14px;
-  width: 38px !important;
-  height: 38px;
+  width: 40px !important;
+  height: 40px;
   padding: 0 !important;
   border-radius: 50% !important;
-  background: #ef4444 !important;
-}
-
-/* TIMELINE */
-
-.timeline {
-  margin-top: 18px;
-}
-
-.timeline-step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 13px;
-  font-size: 14px;
-  font-weight: 900;
-}
-
-.active-step {
-  color: #00a86b;
-}
-
-.inactive-step {
-  color: #94a3b8;
-}
-
-.timeline-dot {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: #cbd5e1;
-}
-
-.timeline-dot.active {
-  background: #00a86b;
-  box-shadow: 0 0 0 6px rgba(0, 168, 107, 0.13);
+  background: crimson !important;
 }
 
 /* DARK MODE */
 
 .dark {
   background:
-    radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 35%),
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.16), transparent 35%),
     linear-gradient(135deg, #020617, #0f172a);
   color: white;
 }
 
-.dark .navbar {
-  background: rgba(15, 23, 42, 0.86);
-  border-color: rgba(51, 65, 85, 0.8);
-}
-
+.dark .navbar,
 .dark .hero-card,
 .dark .medicine-card,
-.dark .cart-panel,
-.dark .admin-panel,
+.dark .category-showcase-card,
+.dark .search-box,
 .dark .auth-card {
-  background: rgba(30, 41, 59, 0.92);
-  border-color: rgba(51, 65, 85, 0.9);
+  background: rgba(17, 24, 39, 0.95);
   color: white;
 }
 
-.dark .cart-item,
-.dark .order-card,
-.dark .search-box {
-  background: #0f172a;
-  border-color: #334155;
-}
-
 .dark p,
-.dark .desc,
-.dark .hero-text p,
-.dark .hero-card p,
-.dark .order-card p {
+.dark .desc {
   color: #cbd5e1;
 }
 
 .dark input,
 .dark textarea,
 .dark select {
-  background: #020617;
   color: white;
-  border-color: #334155;
+  background: #111827;
+}
+
+.dark .category-showcase-card p {
+  color: white;
+}
+
+.dark .admin-input {
+  border: 1px solid #334155;
 }
 
 .dark .price-row span {
@@ -665,56 +483,35 @@ button:hover {
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 15px 16px;
+    padding: 16px 18px;
     flex-direction: column;
     align-items: flex-start;
     gap: 14px;
   }
 
-  .logo-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .logo h2 {
-    font-size: 23px;
-  }
-
-  .logo p {
-    font-size: 11px;
-  }
-
   .nav-links {
     width: 100%;
     overflow-x: auto;
-    gap: 8px;
-    padding-bottom: 5px;
-    scrollbar-width: none;
-  }
-
-  .nav-links::-webkit-scrollbar {
-    display: none;
-  }
-
-  .nav-links button {
-    white-space: nowrap;
-    padding: 9px 12px;
-    font-size: 12px;
-  }
-
-  .user-name {
-    white-space: nowrap;
-    font-size: 12px;
-    align-self: center;
+    padding-bottom: 4px;
   }
 
   .hero {
     grid-template-columns: 1fr;
-    padding: 38px 20px;
+    padding: 40px 20px;
   }
 
-  .hero-text h1 {
-    letter-spacing: -1.5px;
+  .category-showcase,
+  .medicine-section {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .category-showcase-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .medicine-grid {
+    grid-template-columns: 1fr;
   }
 
   .search-box {
@@ -725,40 +522,11 @@ button:hover {
     padding: 15px;
   }
 
-  .medicine-section {
-    padding: 0 20px 50px;
-  }
-
-  .medicine-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .medicine-card {
-    min-height: auto;
-  }
-
-  .cart-panel,
-  .admin-panel {
-    margin: 22px 20px;
-    padding: 22px;
-  }
-
-  .cart-item,
-  .status-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .medicine-actions {
-    flex-direction: column;
-  }
-
-  .auth-card {
-    width: 92%;
-    padding: 28px;
+  .hero-text h1 {
+    font-size: 48px;
   }
 
   .section-header h2 {
-    font-size: 31px;
+    font-size: 30px;
   }
 }
