@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
+import { io } from "socket.io-client";
 
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "./firebase";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
+const socket = io("https://healgo-backend.onrender.com");
 
 function App() {
   const [medicines, setMedicines] = useState([]);
@@ -39,6 +42,18 @@ function App() {
   useEffect(() => {
     fetchMedicines();
     fetchOrders();
+    socket.on("medicineUpdated", () => {
+      fetchMedicines();
+    });
+
+    socket.on("orderUpdated", () => {
+      fetchOrders();
+      fetchMyOrders();
+    });
+    return () => {
+      socket.off("medicineUpdated");
+      socket.off("orderUpdated");
+    };
 
     const savedUser = localStorage.getItem("healgoUser");
 
@@ -50,6 +65,7 @@ function App() {
   }, []);
 
   const fetchMedicines = async () => {
+    setMedicines(data);
     const { data } = await axios.get(
       "https://healgo-backend.onrender.com/api/medicines",
     );
