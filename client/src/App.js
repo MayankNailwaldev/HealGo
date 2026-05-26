@@ -700,8 +700,13 @@ function App() {
                     className="cart-btn"
                     onClick={async () => {
                       try {
+                        if (!user) {
+                          toast.error("Please login first");
+                          return;
+                        }
+
                         if (!customerName || !phone || !address) {
-                          toast.error("Please fill all details");
+                          toast.error("Please fill all checkout details");
                           return;
                         }
 
@@ -717,7 +722,7 @@ function App() {
                           address,
                           prescriptionImage,
                           items: cart,
-                          totalAmount: grandTotal,
+                          totalAmount: grandTotal || cartTotal,
                           status: "Pending",
                         };
 
@@ -736,6 +741,8 @@ function App() {
 
                         fetchOrders();
                         fetchMyOrders(user);
+                        setShowCart(false);
+                        setShowMyOrders(true);
                       } catch (error) {
                         console.log(error);
                         toast.error("Order Failed");
