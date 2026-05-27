@@ -6,6 +6,7 @@ const placeOrder = async (req, res) => {
   try {
     const {
       customerName,
+      customerEmail,
       phone,
       address,
       items,
@@ -13,8 +14,19 @@ const placeOrder = async (req, res) => {
       paymentMethod,
       userId,
       prescriptionImage,
-      customerEmail,
     } = req.body;
+
+    if (!customerName || !customerEmail || !phone || !address) {
+      return res.status(400).json({
+        message: "Customer name, email, phone and address are required",
+      });
+    }
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({
+        message: "Order items are required",
+      });
+    }
 
     let uploadedPrescription = "";
 
@@ -30,8 +42,9 @@ const placeOrder = async (req, res) => {
     }
 
     const order = await Order.create({
-      user: userId,
+      user: userId || null,
       customerName,
+      customerEmail,
       phone,
       address,
       items,
@@ -39,6 +52,7 @@ const placeOrder = async (req, res) => {
       paymentMethod: paymentMethod || "Cash on Delivery",
       paymentStatus: "Pending",
       prescriptionImage: uploadedPrescription,
+      status: "Order Placed",
     });
 
     const itemList = items
@@ -61,7 +75,7 @@ const placeOrder = async (req, res) => {
           `,
         });
       } catch (emailError) {
-        console.log("Email notification failed:", emailError.message);
+        console.log("Customer email notification failed:", emailError.message);
       }
     }
 
@@ -74,6 +88,7 @@ const placeOrder = async (req, res) => {
           html: `
             <h2>New Order Received</h2>
             <p><b>Customer:</b> ${customerName}</p>
+            <p><b>Email:</b> ${customerEmail}</p>
             <p><b>Phone:</b> ${phone}</p>
             <p><b>Address:</b> ${address}</p>
             <p><b>Items:</b> ${itemList}</p>
@@ -87,7 +102,7 @@ const placeOrder = async (req, res) => {
     }
 
     res.status(201).json({
-      message: "Order Placed Successfully. Confirmation email sent.",
+      message: "Order Placed Successfully",
       order,
     });
   } catch (error) {
@@ -115,9 +130,13 @@ const getOrders = async (req, res) => {
 
 const getMyOrders = async (req, res) => {
   try {
+    const userIdentifier = req.params.userId;
+
     const orders = await Order.find({
-      user: req.params.userId,
-    }).sort({ createdAt: -1 });
+      $or: [{ user: userIdentifier }, { customerEmail: userIdentifier }],
+    }).sort({
+      createdAt: -1,
+    });
 
     res.json(orders);
   } catch (error) {
@@ -136,6 +155,12 @@ const updateOrderStatus = async (req, res) => {
       { status },
       { new: true },
     );
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
 
     res.json({
       message: "Order Status Updated",
